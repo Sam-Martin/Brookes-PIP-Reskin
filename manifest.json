@@ -1,0 +1,12 @@
+{
+  "name": "Brookes PIP Page Re-skin",
+  "version": "1.1.1",
+  "description": "Re-skins the Brokes PIP pages to not look more like the rest of the Brookes website.",
+  "content_scripts": [
+    {
+      "matches": ["https://kmis.brookes.ac.uk/*"],
+      "css": ["newstyle.css"],
+	  "js": ["jquery-1.4.1.min.js", "custom.js"]
+    }
+  ]
+}
