@@ -1,6 +1,5 @@
 $(document).ready(function() {
-if(window.location.pathname !="/csms/wprin_menu.main"){
-	//setup the regex filter
+//setup the regex filter
 	jQuery.expr[':'].regex = function(elem, index, match) {
 		var matchParams = match[3].split(','),
 			validLabels = /^(data|css):/,
@@ -13,6 +12,18 @@ if(window.location.pathname !="/csms/wprin_menu.main"){
 			regex = new RegExp(matchParams.join('').replace(/^\s+|\s+$/g,''), regexFlags);
 		return regex.test(jQuery(elem)[attr.method](attr.property));
 	}
+	//setup the get getter
+	var $_GET = {};
+	document.location.search.replace(/\??(?:([^=]+)=([^&]*)&?)/g, function () {
+		function decode(s) {
+			return decodeURIComponent(s.split("+").join(" "));
+		}
+
+		$_GET[decode(arguments[1])] = decode(arguments[2]);
+	});
+if(window.location.pathname !="/csms/wprin_menu.main" && $_GET['format'] != 'P'){
+	
+
 
 	//#################### BODY
 	
@@ -24,31 +35,41 @@ if(window.location.pathname !="/csms/wprin_menu.main"){
 	
 	//#################### NAV TABS 
 	
-	//add navBar class to navbar tables
-	$(":contains('Admin Services')").parents("table").addClass("navBar");
-	$(":contains('My Enrolment & Accounts')").parents("table").addClass("navBar");
-	$(":contains('My PIP')").parents("table").addClass("navBar");
+	//little function telling JS how to sort by name in our multi-dimensional array to come
+	function sortByName(a, b) {
+		var x = a.name.toLowerCase();
+		var y = b.name.toLowerCase();
+		return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+	}
 	
-	//remove the random unclosed TDs
-	$("td[width=2][valign=TOP]").remove();
 	
-	//remove the pointless extra TR
-	$("td[colspan=6][rowspan=1][height=1]").parent().remove();
+	//get an array of navbar elements
+	var navElements = new Array();
+	var navHighlight;
+	$("td[bgcolor=#7F94BB]").parents("TABLE").find("a").each(function(){
+		//navHref.push($(this).attr("href"));
+		//navName.push($(this).text());
+		navElements[navElements.length++] = {href:$(this).attr("href"),name:$(this).text()};
+		if($(this).parents('td').attr('bgcolor') == '#002A8F'){
+			navHighlight = $(this).text();
+		}
+	});
+	navElements.sort(sortByName);
+
+	//prepare the new navbar
+	var navBar = '<ul class="nav">';
+	for(var i in navElements){
+		var liClass = '';
+		if(navElements[i].name == navHighlight){
+			liClass=' highlight';
+		}
+		navBar += '<li class="nav '  + liClass + '"><a href="' + navElements[i].href +'" class="nav">' + navElements[i].name + '</a></li>';
+	}
+	navBar += '</ul><div style="clear:both;"></div>';
+	//remove the old navbars
+	$("td[bgcolor=#002A8F]").parents("TABLE").replaceWith(navBar);
+	$("td[bgcolor=#7F94BB]").parents("TABLE").remove();
 	
-	//remove the spacer gif
-   $("img[SRC~=/images/spacer.gif]").remove();
-   
-   //remove the pointless spacer
-   $("td[background~=/images/bline.gif]").removeAttr('background');
-   
-   //add the tab class to the tabs and remove the bgcolor
-   $("td[BGCOLOR~=#7F94BB]").addClass("navTabs").removeAttr("bgcolor");
-   
-   //add navTabsCorner class
-   $("img[SRC~=/images/tab_end0.gif]").parents("td").removeClass("navTabs").addClass("navTabsCorner");
-   
-   //add the highlight class to the highlighted tab
-   $("td[bgcolor~=#002A8F]").addClass("navTabsHighlight");
    
  
 	//#################### HEADER
@@ -57,6 +78,8 @@ if(window.location.pathname !="/csms/wprin_menu.main"){
 	
 	//#################### TIME TABLE
 	
+	//add timeTable class to timetable table.. table...
+	$("th:contains('Monday')").parentsUntil("table").addClass("timeTable");
 	//add tableHeader class to headers
 	$("th:contains('Monday')").parents("tr").addClass("tableHeader");
 	//add TableHeaderCell class to header Cells
@@ -83,6 +106,15 @@ if(window.location.pathname !="/csms/wprin_menu.main"){
 		$("th:contains('" +  timeSlots[i] + "')").parents("tr").children("td").addClass("timeTableCell");
 	}
 	
+	//#################### REARRANGE MY PIP PAGE
+	
+	var firstTd = $("td:contains('Important Notices')").next();
+	var secondTd = firstTd.next();
+	secondTd.parents("tr").after("<tr><td><h2 class='custom'>Address Details</h2>" + secondTd.html() + "<td></tr>");
+	secondTd.parents("tr").after("<tr><td><h2  class='custom'>Enrolment Details</h2>" + firstTd.html() + "</td></tr>");
+	firstTd.remove();
+	secondTd.remove();
+	$("th:contains('Qualifications')").parent().parent().parent().before("<h2 class='custom'>Qualifications</h2>");
 	
 	//#################### FOOTER
 	//remove the horizontal rule
